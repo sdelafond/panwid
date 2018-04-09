@@ -1,0 +1,5 @@
+python-panwid (0.2.3-1) unstable; urgency=low
+
+  * First release (Closes: #895267)
+
+ -- Sebastien Delafond <seb@debian.org>  Mon, 09 Apr 2018 09:01:57 +0200

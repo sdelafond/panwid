@@ -1,0 +1,14 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: panwid
+Source: https://github.com/tonycpsu/panwid
+
+Files: *
+Copyright: 2018 Tony Cebzanov <tonycpsu@gmail.com>
+License: GPL-2
+
+Files: debian/*
+Copyright: 2018 Sebastien Delafond <seb@debian.org>
+License: GPL-2
+
+License: GPL-2
+ See /usr/share/common-licenses/GPL-2
