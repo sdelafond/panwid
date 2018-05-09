@@ -1,3 +1,9 @@
+python-panwid (0.2.5-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Sebastien Delafond <seb@debian.org>  Wed, 09 May 2018 10:11:50 +0200
+
 python-panwid (0.2.3-1) unstable; urgency=low
 
   * First release (Closes: #895267)
