@@ -1,6 +1,7 @@
 python-panwid (0.2.5-1) unstable; urgency=medium
 
   * New upstream version
+  * Use https in debian/watch
 
  -- Sebastien Delafond <seb@debian.org>  Wed, 09 May 2018 10:11:50 +0200
 
