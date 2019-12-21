@@ -1,7 +1,7 @@
 panwid
 ======
 
-A collection of widgets for [urwid](https://urwid.org/).
+A collection of widgets for [Urwid](https://urwid.org/).
 
 Currently consists of the following:
 
@@ -10,6 +10,7 @@ Currently consists of the following:
 Dropdown menu widget with autocomplete support.
 
 [![asciicast](https://asciinema.org/a/m23L8xPJsTQRxzOCwvc1SuduN.png)](https://asciinema.org/a/m23L8xPJsTQRxzOCwvc1SuduN?autoplay=1)
+
 ## DataTable ##
 
 Widget for displaying tabular data.
@@ -26,6 +27,10 @@ Features include:
 Listbox with an optional scrollbar.  Can signal to other widgets
 (e.g. DataTable) when to fetch more data.  Used by both Dropdown and
 DataTable, but can be used separately.
+
+## TabView ##
+
+A container widget that allows selection of content via tab handles.
 
 **TODOs**:
 

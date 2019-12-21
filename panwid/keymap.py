@@ -37,9 +37,11 @@ def optional_arg_decorator(fn):
 
 
 @optional_arg_decorator
-def keymap_command(f, command=None):
+def keymap_command(f, command=None, *args, **kwargs):
     f._keymap = True
     f._keymap_command = command
+    f._keymap_args = args
+    f._keymap_kwargs = kwargs
     return f
 
 
@@ -64,15 +66,24 @@ def keymapped():
                         if not isinstance(val, list):
                             val = [val]
                         for cmd in val:
+                            args = []
+                            kwargs = {}
+                            if isinstance(cmd, tuple):
+                                if len(cmd) == 3:
+                                    (cmd, args, kwargs) = cmd
+                                elif len(cmd) == 2:
+                                    (cmd, args) = cmd
+                                else:
+                                    raise Exception
                             command = cmd.replace(" ", "_")
                             if not command in self.KEYMAP_MAPPING:
                                 logger.debug("%s: %s not in mapping %s" %(cls, key, self.KEYMAP_MAPPING))
-                                continue
                             if hasattr(self, command):
                                 fn_name = command
                             else:
                                 fn_name = self.KEYMAP_MAPPING[command]
-                            getattr(self, fn_name)()
+                            f = getattr(self, fn_name)
+                            f(*args, **kwargs)
                     return key
                 else:
                     return key

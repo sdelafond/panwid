@@ -17,7 +17,7 @@ class PopUpMixin(object):
         self._w.original_widget = overlay
         self.popup_visible = True
 
-    def close_popup(self):
+    def close_popup(self, source):
         self._w.original_widget = self.view
         self.popup_visible = False
 
@@ -86,7 +86,7 @@ class BaseView(urwid.WidgetWrap):
         super(BaseView, self).__init__(self.placeholder)
         self.placeholder.original_widget = self.view
 
-    def open_popup(self, view, title=None, width=75, height=75):
+    def open_popup(self, view, title=None, width=("relative", 75), height=("relative", 75)):
 
         urwid.connect_signal(
             view, "close_popup", self.close_popup
@@ -95,13 +95,13 @@ class BaseView(urwid.WidgetWrap):
         popup = PopUpFrame(self, view, title=title)
         overlay = PopUpOverlay(
             self, popup, self.view,
-            'center', ('relative', width),
-            'middle', ('relative', height)
+            'center', width,
+            'middle', height
         )
         self._w.original_widget = overlay
         self.popup_visible = True
 
-    def close_popup(self):
+    def close_popup(self, source=None):
         self._w.original_widget = self.view
         self.popup_visible = False
 
