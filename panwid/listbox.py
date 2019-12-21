@@ -17,6 +17,7 @@ class ListBoxScrollBar(urwid.WidgetWrap):
         scroll_marker_height = 1
         del self.pile.contents[:]
         if (len(self.parent.body)
+            and self.parent.row_count
             and self.parent.focus is not None
             and self.parent.row_count > height):
             scroll_position = int(
@@ -225,8 +226,8 @@ class ScrollingListBox(urwid.WidgetWrap):
         elif command == "activate":
             urwid.signals.emit_signal(self, "select", self, self.selection)
 
-        else:
-            return super(ScrollingListBox, self).keypress(size, key)
+        # else:
+        return super(ScrollingListBox, self).keypress(size, key)
 
     @property
     def selection(self):
@@ -237,7 +238,11 @@ class ScrollingListBox(urwid.WidgetWrap):
 
     def render(self, size, focus=False):
 
-        maxcol, maxrow = size
+        maxcol = size[0]
+        self.width = maxcol
+        if len(size) > 1:
+            maxrow = size[1]
+            self.height = maxrow
 
         # print
         # print
@@ -251,12 +256,12 @@ class ScrollingListBox(urwid.WidgetWrap):
             self.load_more = False
             self.page += 1
             # old_len = len(self.body)
-            urwid.signals.emit_signal(
-                self, "load_more")
             try:
                 focus = self.focus_position
             except IndexError:
                 focus = None
+            urwid.signals.emit_signal(
+                self, "load_more", focus)
             if (self.queued_keypress
                 and focus
                 and focus < len(self.body)
@@ -270,8 +275,7 @@ class ScrollingListBox(urwid.WidgetWrap):
         if self.with_scrollbar and len(self.body):
             self.scroll_bar.update(size)
 
-        self.height = maxrow
-        return super(ScrollingListBox, self).render( (maxcol, maxrow), focus)
+        return super(ScrollingListBox, self).render(size, focus)
 
 
     def disable(self):
@@ -304,7 +308,7 @@ class ScrollingListBox(urwid.WidgetWrap):
         self.listbox._invalidate()
 
     def __getattr__(self, attr):
-        if attr in ["ends_visible", "set_focus", "set_focus_valign", "body", "focus"]:
+        if attr in ["ends_visible", "focus_position", "set_focus", "set_focus_valign", "body", "focus"]:
             return getattr(self.listbox, attr)
         # elif attr == "body":
         #     return self.walker

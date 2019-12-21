@@ -10,6 +10,7 @@ import itertools
 import six
 import urwid
 from urwid_utils.palette import *
+# import urwid_readline
 from orderedattrdict import AttrDict
 
 from .datatable import *
@@ -65,9 +66,11 @@ class DropdownItem(urwid.WidgetWrap):
             self.label_text,
             left_chars=left_chars, right_chars=right_chars
         )
-        # self.padding = urwid.Padding(self.button, width=("relative", 100),
-        #                              left=self.margin, right=self.margin)
-        self.padding = self.button
+        self.padding = urwid.Padding(self.button, width=("relative", 100),
+                                     left=self.margin, right=self.margin)
+        # self.padding = self.button
+
+
         self.attr = urwid.AttrMap(self.padding, {None: "dropdown_text"})
         self.attr.set_focus_map({
             None: "dropdown_focused",
@@ -112,6 +115,7 @@ class DropdownItem(urwid.WidgetWrap):
             self.label_text,
             re.IGNORECASE if not case_sensitive else 0
         ).groups()
+
         self.set_label([
             ("dropdown_text", a),
             ("dropdown_highlight", b),
@@ -122,10 +126,16 @@ class DropdownItem(urwid.WidgetWrap):
         self.set_label(("dropdown_text", self.label_text))
 
 
-
+# class AutoCompleteEdit(urwid_readline.ReadlineEdit):
+@keymapped()
 class AutoCompleteEdit(urwid.Edit):
 
     signals = ["close"]
+
+    @keymap_command()
+    def clear(self):
+        raise Exception
+        self.set_edit_text("")
 
     def keypress(self, size, key):
         if key == "enter":
@@ -169,35 +179,45 @@ class DropdownDialog(urwid.WidgetWrap, KeymapMovementMixin):
 
     min_width = 4
 
+    label = None
+    border = None
+    scrollbar = False
+    auto_complete = False
+    margin = 0
+    max_height = None
+
     def __init__(
             self,
             drop_down,
             items,
             default=None,
-            label=None, border=False,
-            scrollbar=False,
-            auto_complete=False,
-            margin = 0,
+            label=None,
+            border=False,
+            margin = None,
+            scrollbar=None,
+            auto_complete=None,
             left_chars=None,
             right_chars=None,
             left_chars_top=None,
             rigth_chars_top=None,
-            max_height=10,
-            # keymap = {}
+            max_height=None,
+            keymap = {}
     ):
         self.drop_down = drop_down
         self.items = items
-        self.label = label
-        self.border = border
-        self.scrollbar = scrollbar
-        self.auto_complete = auto_complete
-        self.margin = margin
-        self.max_height = max_height
+        if label is not None: self.label = label
+        if border is not None: self.border = border
+        if margin is not None: self.margin = margin
+        if scrollbar is not None: self.scrollbar = scrollbar
+        if auto_complete is not None: self.auto_complete = auto_complete
+        if max_height is not None: self.max_height = max_height
 
         # self.KEYMAP = keymap
 
         self.completing = False
         self.complete_anywhere = False
+        self.last_complete_index = None
+        self.last_filter_text = None
 
         self.selected_button = 0
         buttons = []
@@ -210,7 +230,9 @@ class DropdownDialog(urwid.WidgetWrap, KeymapMovementMixin):
                 )
                 for l, v in self.items.items()
         ]
-        self.dropdown_buttons = ScrollingListBox(buttons, with_scrollbar=scrollbar)
+        self.dropdown_buttons = ScrollingListBox(
+            urwid.SimpleListWalker(buttons), with_scrollbar=scrollbar
+        )
 
         urwid.connect_signal(
             self.dropdown_buttons,
@@ -328,7 +350,8 @@ class DropdownDialog(urwid.WidgetWrap, KeymapMovementMixin):
 
     @property
     def selected_value(self):
-
+        if not self.focus_position:
+            return None
         return self.body[self.focus_position].value
 
     @keymap_command()
@@ -363,11 +386,33 @@ class DropdownDialog(urwid.WidgetWrap, KeymapMovementMixin):
         self.hide_bar()
         self.completing = False
 
-    def complete(self, case_sensitive=False):
+    @keymap_command
+    def complete(self, step=None, no_wrap=False, case_sensitive=False):
 
-        self[self.focus_position].unhighlight()
         if not self.filter_text:
             return
+
+        if not step and self.filter_text == self.last_filter_text:
+            return
+
+        logger.info("complete")
+
+        if self.last_complete_index:
+            self[self.last_complete_index].unhighlight()
+
+        start=0
+
+        if step:
+            if step > 0:
+                start = (self.last_complete_index) % len(self) + 1
+            else:
+                start = len(self) - self.last_complete_index
+
+        if no_wrap:
+            end = len(self)
+        else:
+            end = start+len(self)
+
 
         if case_sensitive:
             g = lambda x: x
@@ -379,11 +424,27 @@ class DropdownDialog(urwid.WidgetWrap, KeymapMovementMixin):
         else:
             f = lambda x: g(x).startswith(g(self.filter_text))
 
-        for i, w in enumerate(self.body):
+        cycle = itertools.cycle(
+            enumerate(self.body)
+            if step is None or step > 0
+            else reversed(list(enumerate(self.body)))
+        )
+        rows = list(itertools.islice(cycle, start, end))
+        logger.info(f"{start}, {end}, len: {len(rows)}")
+        for i, w in rows:
+            logger.info(i)
             if f(w):
+                self.last_complete_index = i
                 self[i].highlight_text(self.filter_text)
                 self.focus_position = i
                 break
+        else:
+            self.filter_text = self.last_filter_text
+            if self.last_complete_index:
+                self[self.last_complete_index].highlight_text(self.filter_text)
+            # self.last_complete_index = None
+
+        self.last_filter_text = self.filter_text
 
     @keymap_command()
     def cancel(self):
@@ -398,12 +459,14 @@ class DropdownDialog(urwid.WidgetWrap, KeymapMovementMixin):
         self.pile.contents.append(
             (self.auto_complete_bar, self.pile.options("given", 1))
         )
+        self.box.height -= 1
         self.pile.focus_position = 1
 
     def hide_bar(self):
         self[self.focus_position].unhighlight()
         self.pile.focus_position = 0
         del self.pile.contents[1]
+        self.box.height += 1
 
 @keymapped()
 class Dropdown(urwid.PopUpLauncher):
@@ -426,10 +489,10 @@ class Dropdown(urwid.PopUpLauncher):
             left_chars = None, right_chars = None,
             left_chars_top = None, right_chars_top = None,
             auto_complete = False,
-            keymap = {}
+            max_height = 10,
+            # keymap = {}
     ):
 
-        # raise Exception(self.KEYMAP_SCOPE)
         if items is not None:
             self._items = items
         if label is not None:
@@ -475,6 +538,7 @@ class Dropdown(urwid.PopUpLauncher):
             right_chars = right_chars,
             auto_complete = self.auto_complete,
             scrollbar = scrollbar,
+            max_height = max_height,
             # keymap = self.KEYMAP
         )
 
@@ -492,9 +556,15 @@ class Dropdown(urwid.PopUpLauncher):
 
         if self.default is not None:
             try:
-                self.select_value(self.default)
+                if isinstance(self.default, str):
+                    self.select_label(self.default)
+                else:
+                    raise StopIteration
             except StopIteration:
-                self.focus_position = 0
+                try:
+                    self.select_value(self.default)
+                except StopIteration:
+                    self.focus_position = 0
 
         if len(self):
             self.select(self.selection)
@@ -602,6 +672,9 @@ class Dropdown(urwid.PopUpLauncher):
         height = self.pop_up.height + 1
         return height
 
+    def pack(self, size, focus=False):
+        return (self.width, self.height)
+
     @property
     def page_size(self):
         return self.pop_up.height
@@ -627,8 +700,34 @@ class Dropdown(urwid.PopUpLauncher):
     @focus_position.setter
     def focus_position(self, pos):
         # self.select_index(pos)
+        old_pos = self.focus_position
         self.pop_up.selected_button = self.pop_up.focus_position = pos
         self.select(self.selection)
+
+    @property
+    def items(self):
+        return self._items
+
+    @property
+    def selection(self):
+        return self.pop_up.selection
+
+    def select_label(self, label, case_sensitive=False):
+
+        old_value = self.value
+
+        f = lambda x: x
+        if not case_sensitive:
+            f = lambda x: x.lower()
+
+        index = next(itertools.dropwhile(
+                lambda x: f(x[1]) != f(label),
+                enumerate((self._items.keys())
+            )
+        ))[0]
+        self.focus_position = index
+
+
 
     @property
     def items(self):
@@ -641,6 +740,8 @@ class Dropdown(urwid.PopUpLauncher):
 
     def select_label(self, label, case_sensitive=False):
 
+        old_value = self.value
+
         f = lambda x: x
         if not case_sensitive:
             f = lambda x: x.lower()
@@ -651,6 +752,7 @@ class Dropdown(urwid.PopUpLauncher):
             )
         ))[0]
         self.focus_position = index
+
 
 
     def select_value(self, value):
@@ -675,10 +777,38 @@ class Dropdown(urwid.PopUpLauncher):
     def selected_label(self):
         return self.selection.label
 
+    @selected_label.setter
+    def selected_label(self, label):
+        return self.select_label(label)
+
     @property
     def selected_value(self):
+        if not self.selection:
+            return None
         return self.selection.value
 
+    @selected_value.setter
+    def selected_value(self, value):
+        return self.select_value(value)
+
+    @property
+    def value(self):
+        return self.selected_value
+
+    @value.setter
+    def value(self, value):
+        old_value = self.value
+
+        # try to set by value.  if not found, try to set by label
+        try:
+            self.selected_value = value
+        except StopIteration:
+            self.selected_label = value
+
+    def cycle_prev(self):
+        self.cycle(-1)
+
+    @keymap_command("cycle")
     def cycle(self, n):
         pos = self.focus_position + n
         if pos > len(self) - 1:
@@ -692,7 +822,8 @@ class Dropdown(urwid.PopUpLauncher):
         logger.debug("select: %s" %(button))
         self.button.set_label(("dropdown_text", button.label))
         self.pop_up.dropdown_buttons.listbox.set_focus_valign("top")
-        self._emit("change", button, button.value)
+        # if old_pos != pos:
+        self._emit("change", self.selected_label, self.selected_value)
 
     # def set_items(self, items, selected_value):
     #     self._items = items

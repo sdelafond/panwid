@@ -1,0 +1,13 @@
+Metadata-Version: 1.1
+Name: panwid
+Version: 0.3.0.dev13
+Summary: Useful widgets for urwid
+Home-page: https://github.com/tonycpsu/panwid
+Author: Tony Cebzanov
+Author-email: tonycpsu@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
+Classifier: Intended Audience :: Developers
