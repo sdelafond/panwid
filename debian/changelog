@@ -1,9 +1,13 @@
-python-panwid (0.2.5-2) UNRELEASED; urgency=medium
+python-panwid (0.3.0.dev13-1) unstable; urgency=medium
 
+  [ Ondřej Nový ]
   * d/control: Fix wrong Vcs-*
   * d/watch: Use https protocol
 
- -- Ondřej Nový <onovy@debian.org>  Mon, 01 Oct 2018 10:06:45 +0200
+  [ Sébastien Delafond ]
+  * New upstream version 0.3.0.dev13
+
+ -- Sebastien Delafond <seb@debian.org>  Sat, 21 Dec 2019 10:09:26 +0100
 
 python-panwid (0.2.5-1) unstable; urgency=medium
 
