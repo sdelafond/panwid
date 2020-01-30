@@ -1,6 +1,6 @@
-Metadata-Version: 1.1
+Metadata-Version: 1.2
 Name: panwid
-Version: 0.3.0.dev13
+Version: 0.3.0.dev15
 Summary: Useful widgets for urwid
 Home-page: https://github.com/tonycpsu/panwid
 Author: Tony Cebzanov
@@ -11,3 +11,4 @@ Platform: UNKNOWN
 Classifier: Environment :: Console
 Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
 Classifier: Intended Audience :: Developers
+Requires-Python: >=3.6

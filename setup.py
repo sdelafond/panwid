@@ -8,11 +8,12 @@ from glob import glob
 
 name = 'panwid'
 setup(name=name,
-      version='0.3.0.dev13',
+      version='0.3.0.dev15',
       description='Useful widgets for urwid',
       author='Tony Cebzanov',
       author_email='tonycpsu@gmail.com',
       url='https://github.com/tonycpsu/panwid',
+      python_requires='>=3.6',
       classifiers=[
           'Environment :: Console',
           'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
@@ -25,8 +26,7 @@ setup(name=name,
           "urwid",
           "urwid-utils>=0.1.2",
           "six",
-          "raccoon==2.1.5",
-          "blist",
+          "raccoon>=3.0.0",
           "orderedattrdict"
       ],
       test_suite="test",
