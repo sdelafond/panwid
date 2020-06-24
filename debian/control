@@ -2,10 +2,16 @@ Source: python-panwid
 Maintainer: Sebastien Delafond <seb@debian.org>
 Section: python
 Priority: optional
-Build-Depends: debhelper-compat (= 12), dh-python, python3-setuptools, python3-all, python3-pytest,
+Build-Depends:
+ debhelper-compat (= 12),
+ dh-python,
+ locales-all,
+ python3-all,
  python3-blist,
  python3-orderedattrdict,
+ python3-pytest,
  python3-raccoon,
+ python3-setuptools,
  python3-urwid,
  python3-urwid-utils,
 Standards-Version: 4.1.3
